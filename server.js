@@ -6,8 +6,31 @@ const fccTesting  = require('./freeCodeCamp/fcctesting.js');
 const session = require('express-session');
 const passport = require('passport');
 require('dotenv').config();
+const mongo = require('mongodb').MongoClient;
 
 const app = express();
+
+mongo.connect(process.env.DATABASE, (err, db) => {
+  if(err) {
+    console.log('Database error: ' + err);
+  } else {
+    console.log('Successful database connection');
+
+    //serialization and app.listen
+  }
+});
+
+passport.serializeUser((user, done) => {
+  done(null, user._id);
+});
+passport.deserializeUser((id, done) => {
+  db.collection('users').findOne(
+    {_id: new ObjectID(id)},
+      (err, doc) => {
+        done(null, doc);
+      }
+  );
+});
 
 fccTesting(app); //For FCC testing purposes
 app.use('/public', express.static(process.cwd() + '/public'));
