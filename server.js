@@ -48,7 +48,7 @@ mongo.connect(process.env.DATABASE, (err, db) => {
       });
 
     app.route('/login')
-      .post(passport.authenticate('local', { failureRedirect: '/' }),(req,res) => {
+      .post(passport.authenticate('local', { failureRedirect: '/' }), (req,res) => {
            res.redirect('/profile');
       });
     
@@ -56,7 +56,7 @@ mongo.connect(process.env.DATABASE, (err, db) => {
     app
       .route('/profile')
       .get(ensureAuthenticated, (req,res) => {
-         res.render(process.cwd() + '/views/pug/profile');
+         res.render(process.cwd() + '/views/pug/profile', {username: req.user.username});
       });
 
     app.listen(process.env.PORT || 3000, () => {
