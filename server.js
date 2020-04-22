@@ -16,6 +16,20 @@ mongo.connect(process.env.DATABASE, (err, db) => {
     console.log('Database error: ' + err);
   } else {
     console.log('Successful database connection');
+
+    passport.serializeUser((user, done) => {
+      done(null, user._id);
+    });
+    
+    passport.deserializeUser((id, done) => {
+      db.collection('users').findOne(
+        {_id: new ObjectID(id)},
+          (err, doc) => {
+            done(null, doc);
+          }
+      );
+    });
+
     passport.use(new LocalStrategy(
       function(username, password, done) {
         db.collection('users').findOne({ username: username }, function (err, user) {
@@ -27,19 +41,22 @@ mongo.connect(process.env.DATABASE, (err, db) => {
         });
       }
     ));
-  }
-});
 
-passport.serializeUser((user, done) => {
-  done(null, user._id);
-});
-passport.deserializeUser((id, done) => {
-  db.collection('users').findOne(
-    {_id: new ObjectID(id)},
-      (err, doc) => {
-        done(null, doc);
-      }
-  );
+    app.route('/')
+      .get((req, res) => {
+        res.render(process.cwd() + '/views/pug/index', {title: 'Hello', message: 'Please login', showLogin: true});
+      });
+
+    app.route('/login')
+      .post(passport.authenticate('local', { failureRedirect: '/' }),(req,res) => {
+           res.redirect('/profile');
+      });
+
+    app.listen(process.env.PORT || 3000, () => {
+      console.log("Listening on port " + process.env.PORT);
+    });
+
+  }
 });
 
 fccTesting(app); //For FCC testing purposes
@@ -53,12 +70,3 @@ app.use(session({
   saveUninitialized: true,
 }));
 app.use(passport.initialize());
-
-app.route('/')
-  .get((req, res) => {
-    res.render(process.cwd() + '/views/pug/index', {title: 'Hello', message: 'Please login'});
-  });
-
-app.listen(process.env.PORT || 3000, () => {
-  console.log("Listening on port " + process.env.PORT);
-});
